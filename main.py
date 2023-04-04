@@ -22,6 +22,24 @@ def oos(S):
         print(f.read())
     return ret
 
+def run_c(S):
+    with open("a.c","w",encoding="utf-8") as f:
+        f.write(S)
+    oos("gcc a.c")
+    oos("a.exe")
+
+def run_cpp(S):
+    with open("a.cpp","w",encoding="utf-8") as f:
+        f.write(S)
+    oos("g++ a.cpp")
+    oos("a.exe")
+
+def run_java(S):
+    with open("a.java","w",encoding="utf-8") as f:
+        f.write(S)
+    oos("javac a.java")
+    oos("java a")
+
 def output() :
     code = None
     code_old = None
