@@ -16,12 +16,19 @@ s = subprocess.Popen("java -Xms1G -Xmx2G -jar server.jar nogui",stdin=subprocess
 
 Run = True
 
+def oos(S):
+    ret = os.system(S+">a.txt")
+    with open("a.txt",encoding="gbk") as f:
+        print(f.read())
+    return ret
+
 def output() :
     code = None
     code_old = None
+    start_old = None
     while Run :
         try:
-            out = s.stdout.readline().decode("utf-8")
+            out = s.stdout.readline().decode("utf-8",errors="ignore")
             if out:
                 print(out[:-1])
                 code = out.split("block data: ")
@@ -37,7 +44,7 @@ def output() :
                         while code[-3:] != "\r\\n":
                             code_ = "\\n" + s.stdout.readline().decode("utf-8").replace("\n","\\n")
                             code += code_
-                        else:
+                        else :
                             code = code[:-4]
                         code = eval(code)["pages"]
                         block = ""
@@ -54,10 +61,17 @@ def output() :
                                 s.stdin.flush()
                         os.chdir(home)
         except Exception as e :
-            print()
-            print(e.args[0])
-            print()
-            print(traceback.format_exc())
+            error = traceback.format_exc()
+            # print()
+            # print(e.args[0])
+            # print()
+            # print(error)
+            s.stdin.write( ( f"say {e.args[0]}\n" ).encode("utf-8") )
+            s.stdin.flush()
+            for i in error.split("\n"):
+                if i :
+                    s.stdin.write( ( f"say {i}\n" ).encode("utf-8") )
+                    s.stdin.flush()
             print()
     s.terminate()
 
