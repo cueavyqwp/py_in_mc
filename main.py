@@ -1,49 +1,58 @@
-from __future__ import print_function
 from __future__ import unicode_literals
+from __future__ import print_function
 from prompt_toolkit import prompt
 
 from contextlib import redirect_stdout
 from io import StringIO
 
+from time import sleep
 import subprocess
 import traceback
 import threading
 import os
 
 home = os.getcwd()
-
 s = subprocess.Popen("java -Xms1G -Xmx2G -jar server.jar nogui",stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-
 Run = True
 
 def oos(S):
     ret = os.system(S+">a.txt")
     with open("a.txt",encoding="gbk") as f:
         print(f.read())
+    if not ret :
+        ret = ''
     return ret
 
 def run_c(S):
     with open("a.c","w",encoding="utf-8") as f:
         f.write(S)
-    print(oos("gcc a.c"))
-    print(oos("a.exe"))
+    ret = ""
+    ret += oos("gcc a.c")
+    ret += oos("a.exe")
+    print(ret)
+    return ret
 
 def run_cpp(S):
     with open("a.cpp","w",encoding="utf-8") as f:
         f.write(S)
-    print(oos("g++ a.cpp"))
-    print(oos("a.exe"))
+    ret = ""
+    ret += oos("g++ a.cpp")
+    ret += oos("a.exe")
+    print(ret)
+    return ret
 
 def run_java(S):
     with open("a.java","w",encoding="utf-8") as f:
         f.write(S)
-    print(oos("javac a.java"))
-    print(oos("java a"))
+    ret = ""
+    ret += oos("javac a.java")
+    ret += oos("java a")
+    print(ret)
+    return ret
 
 def output() :
     code = None
     code_old = None
-    start_old = None
     while Run :
         try:
             out = s.stdout.readline().decode("utf-8",errors="ignore")
@@ -59,11 +68,14 @@ def output() :
                     if ( len(code) - 1 ) and code != code_old :
                         code_old = code
                         code = code[1].split("tag: ")[1].replace("pages","\"pages\"").replace('\\"','"')[:-1]
-                        while code[-3:] != "\r\\n":
-                            code_ = "\\n" + s.stdout.readline().decode("utf-8").replace("\n","\\n")
-                            code += code_
+                        if code[-3:] != "}}\r" :
+                            while ( code[-3:] != "\r\\n" ) :
+                                code_ = "\\n" + s.stdout.readline().decode("utf-8").replace("\n","\\n")
+                                code += code_
+                            else :
+                                code = code[:-4]
                         else :
-                            code = code[:-4]
+                            code = code[:-2]
                         code = eval(code)["pages"]
                         block = ""
                         for i in code :
@@ -100,7 +112,10 @@ while Run :
     user_comm = prompt().strip()
     if len(user_comm) :
         if user_comm.lower() == 'q':
+            s.stdin.write( b"stop\n" )
+            s.stdin.flush()
+            sleep(10)
             Run = False
-        elif ( len(user_comm) - 1 ) and user_comm[0] == "/" :
+        elif ( len(user_comm.lower()) - 1 ) and user_comm[0] == "/" :
             s.stdin.write( ( user_comm + "\n" ).encode("utf-8") )
             s.stdin.flush()
